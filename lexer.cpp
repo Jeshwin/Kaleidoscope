@@ -16,18 +16,33 @@ enum Token {
 static std::string IdentifierStr;
 static double NumberValue;
 
+bool is_valid_id_char(int c) { return isalnum(c) || c == '_'; }
+
+// Handle floating point number with leading or trailing decimal point
+double get_num_token(int LastChar) {
+    bool has_decimal = false;
+    std::string NumberStr;
+    do {
+        NumberStr += LastChar;
+        if (!has_decimal && LastChar == '.') has_decimal = true;
+        LastChar = getchar();
+    } while (isdigit(LastChar) || (LastChar == '.' && !has_decimal));
+
+    return strtod(NumberStr.c_str(), 0);
+}
+
 // Get next token from stdin
-static int gettok() {
+static int get_token() {
     static int LastChar = ' ';
 
-    // Trim leading whitespace
+    // Trim whitespace
     while (isspace(LastChar)) LastChar = getchar();
 
     // Read a word
-    // isalpha matches regex [a-zA-Z][a-zA-Z0-9]*
     if (isalpha(LastChar)) {
         IdentifierStr = LastChar;
-        while (isalnum((LastChar = getchar()))) IdentifierStr += LastChar;
+        while (is_valid_id_char((LastChar = getchar())))
+            IdentifierStr += LastChar;
 
         // Check keywords
         if (IdentifierStr == "def") return token_def;
@@ -36,17 +51,9 @@ static int gettok() {
         return token_identifier;
     }
 
-    // Read a number
-    // Matches regex [0-9.]+
+    // Read a floating point number
     if (isdigit(LastChar) || LastChar == '.') {
-        std::string NumberStr;
-        do {
-            NumberStr += LastChar;
-            LastChar = getchar();
-        } while (isdigit(LastChar) || LastChar == '.');
-
-        NumberValue = strtod(NumberStr.c_str(), 0);
-        return token_number;
+        NumberValue = get_num_token(LastChar) return token_number;
     }
 
     // Handle comments `#`
@@ -55,7 +62,7 @@ static int gettok() {
         do LastChar = getchar();
         while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 
-        if (LastChar != EOF) return gettok();
+        if (LastChar != EOF) return get_token();
     }
 
     // Check for end of file.  Don't eat the EOF.
