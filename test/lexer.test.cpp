@@ -39,6 +39,26 @@ void test_get_word_token() {
     assert(lex_word("x, y", c) == "x" && c == ',');
 }
 
+// Helper function to test a comment input
+static bool lex_comment(const char* s, int& next) {
+    std::istringstream in(s);
+    next = in.get();
+    return skip_comment(next, in);
+}
+
+// Test number lexer
+void test_skip_comment() {
+    static int c = ' ';
+    assert(lex_comment("// Hello\nx", c) && c == '\n');
+    assert(lex_comment("// eof", c) && c == EOF);
+    assert(lex_comment("/* x\n*/y", c) && c == 'y');
+    assert(lex_comment("/**/x", c) && c == 'x');
+    assert(lex_comment("/* a ** b */x", c) && c == 'x');
+    assert(lex_comment("/* a / b */x", c) && c == 'x');
+    assert(!lex_comment("/ Not a comment", c) && c == '/');
+    assert(lex_comment("/* Forgot to close", c) && c == EOF);
+}
+
 int main() {
     test_get_num_token();
     test_get_word_token();

@@ -18,6 +18,7 @@ static std::string IdentifierStr;
 static double NumberValue;
 
 bool is_valid_id_char(int c) { return isalnum(c) || c == '_'; }
+bool is_eol(int c) { return c == EOF || c == '\n' || c == '\r'; }
 
 // Handle words
 std::string get_word_token(int& LastChar, std::istream& in) {
@@ -29,7 +30,9 @@ std::string get_word_token(int& LastChar, std::istream& in) {
 
 // Handle floating point number with leading or trailing decimal point
 double get_num_token(int& LastChar, std::istream& in) {
+    // Flag for if a decimal has already been seen
     bool has_decimal = false;
+
     std::string NumberStr;
     do {
         NumberStr += LastChar;
@@ -40,12 +43,38 @@ double get_num_token(int& LastChar, std::istream& in) {
     return strtod(NumberStr.c_str(), 0);
 }
 
+// Handle C-style comments
+// single-line `//` and multi-line `/* */`
+bool skip_comment(int& LastChar, std::istream& in) {
+    if (LastChar == '/' && in.peek() == '/') {
+        // Case 1: single-line comment
+        // Eat in until end of line
+        do LastChar = in.get();
+        while (!is_eol(LastChar));
+        return true;
+    } else if (LastChar == '/' && in.peek() == '*') {
+        // Case 2: multi-line comment
+        // Eat the asterisk
+        LastChar = in.get();
+        // Eat in until */ or EOF for unfinished multi-line comment
+        do LastChar = in.get();
+        while (LastChar != EOF && !(LastChar == '*' && in.peek() == '/'));
+        // LastChar stops at asterisk; continue until end of comment
+        LastChar = in.get();
+        LastChar = in.get();
+        return true;
+    }
+    // Not a comment
+    return false;
+}
+
 // Get next token from stdin
 static int get_token(std::istream& in = std::cin) {
     static int LastChar = ' ';
 
-    // Trim whitespace
-    while (isspace(LastChar)) LastChar = in.get();
+    // Ignore whitespace and comments
+    while (isspace(LastChar) || skip_comment(LastChar, in))
+        if (isspace(LastChar)) LastChar = in.get();
 
     // Read a word
     if (isalpha(LastChar)) {
@@ -62,15 +91,6 @@ static int get_token(std::istream& in = std::cin) {
     if (isdigit(LastChar) || LastChar == '.') {
         NumberValue = get_num_token(LastChar, in);
         return token_number;
-    }
-
-    // Handle comments `#`
-    if (LastChar == '#') {
-        // Comment until end of line.
-        do LastChar = in.get();
-        while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
-
-        if (LastChar != EOF) return get_token(in);
     }
 
     // Check for end of file.  Don't eat the EOF.
