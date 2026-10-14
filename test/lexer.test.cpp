@@ -5,8 +5,6 @@
 #include <sstream>
 #include <string>
 
-#include "util/pretty_print.hpp"
-
 // Helper function to test a number input
 static double lex_num(const char* s, int& next) {
     std::istringstream in(s);
@@ -44,6 +42,7 @@ void test_get_word_token() {
 int main() {
     test_get_num_token();
     test_get_word_token();
-    pretty_print("All lexer test passed!", FGColor::green);
+    test_skip_comment();
+    std::cout << "\033[32mAll lexer tests passed!\033[0m\n";  // green
     return 0;
 }

@@ -12,8 +12,8 @@ all: lexer parser
 lexer:  $(LEXER_OBJ)
 parser: $(PARSER_OBJ)
 
-# Every top-level and util/ .cpp is linked into tests; driver.cpp has its own main() so it's excluded
-SRCS  := $(filter-out driver.cpp,$(wildcard *.cpp util/*.cpp))
+# Every top-level .cpp is linked into tests; driver.cpp has its own main() so it's excluded
+SRCS  := $(filter-out driver.cpp,$(wildcard *.cpp))
 OBJS  := $(SRCS:%.cpp=$(BUILD)/%.o)
 TESTS := $(patsubst test/%.test.cpp,$(BUILD)/test/%,$(wildcard test/*.test.cpp))
 
